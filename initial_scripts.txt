@@ -1,0 +1,25 @@
+# Data treatment
+# Get the species name and the KO identifiers from the uniprot database
+cut -f9,6 ../data_raw/Bacteria_tab_uniprot-database.txt | sort | uniq > Bacteria_org_func_noIntra.txt
+cut -f9,6 ../data_raw/Fungi_tab_uniprot-database.txt | sort | uniq > Fungi_org_func_noIntra.txt
+
+# Remove the lines containing multiple KO functions.
+awk -F "\t" '{if ($2 ~ /;K/) {print "A_NOT"} else print $0}' Bacteria_org_func_noIntra.txt |grep -v "A_NOT" > ANOT_clean_ambiguous_Bacteria_OF_noIntra.txt
+
+awk -F "\t" '{if ($2 ~ /;K/) {print "A_NOT"} else print $0}' Fungi_org_func_noIntra.txt |grep -v "A_NOT" > ANOT_clean_ambiguous_Fungi_OF_noIntra.txt
+
+## Rscript to generate the presence and absense matrixes
+setwd(dir = "D:/projects/Robert_Diversity_Redundancy/cumulative_functions_per_sp/")
+
+# Load the data
+FuncOrgF_noIntra = read.delim(file = "../data_raw/ANOT_clean_ambiguous_Fungi_OF_noIntra.txt", sep = "\t", header = FALSE)
+BacOrgF_noIntra = read.delim(file = "../data_raw/ANOT_clean_ambiguous_Bacteria_OF_noIntra.txt", sep = "\t", header = FALSE)
+
+# Generate a matrix from the table
+fungal_comm <- as.data.frame.matrix(table(FuncOrgF_noIntra))
+bacterial_comm <- as.data.frame.matrix(table(BacOrgF_noIntra))
+
+# Save matrixes (because git hub doesn't accept the whole data.)
+write.table(x = fungal_comm, file = "Fungal_presence_absence_matrix.txt", row.names = F, col.names = F)
+write.table(x = bacterial_comm, file = "Bacterial_presence_absence_matrix.txt", row.names = F, col.names = F)
+
